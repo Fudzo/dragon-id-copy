@@ -1,4 +1,22 @@
-const port = chrome.runtime.connect({ name: "content" });
+let port;
+
+function connect() {
+    // If connection already exists, return
+    if (port && port.name === 'yourPortName') {
+      return;
+    }
+
+    port = chrome.runtime.connect({ name: "content" });
+
+    // Handle disconnection or errors
+  port.onDisconnect.addListener(() => {
+    console.log('Connection lost, attempting to reconnect...');
+    setTimeout(connect, 1000); // Retry after 1 second
+  });
+}
+
+
+
 
 function createSnackbar(message, id, duration = 3000 ) {
     // Create the snackbar element
@@ -184,3 +202,12 @@ window.addEventListener("mousedown", function (event) {
         return "pageJSON not found";
     }
   }
+
+  connect()
+  
+  setInterval(() => {
+    if (!port || port.disconnected) {
+      console.log('Reconnecting to the worker...');
+      connect();
+    }
+  }, 5000); // Check every 5 seconds
